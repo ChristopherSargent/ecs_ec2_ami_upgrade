@@ -1,0 +1,10 @@
+---
+# defaults file for ec2_ami_upgrade
+---
+aws_access_key: "YOUR_AWS_ACCESS_KEY"
+aws_secret_key: "YOUR_AWS_SECRET_KEY"
+key_name: "YOUR_KEY_NAME"
+region: "us-east-1"
+instance_type: "t2.micro"
+ami_id: "YOUR_AMI_ID"
+

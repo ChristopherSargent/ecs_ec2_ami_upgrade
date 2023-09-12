@@ -1,0 +1,49 @@
+---
+# tasks file for ec2_ami_upgrade
+- name: Launch EC2 instance
+  ec2:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    key_name: "{{ key_name }}"
+    region: "{{ region }}"
+    instance_type: "{{ instance_type }}"
+    image_id: "{{ ami_id }}"
+    wait: yes
+  register: ec2_instance
+
+- name: Wait for SSH to become available
+  wait_for:
+    host: "{{ ec2_instance.instances[0].public_ip }}"
+    port: 22
+    delay: 30
+    timeout: 600
+
+- name: Run dnf upgrade on EC2 instance
+  become: yes
+  become_user: ec2-user
+  shell: dnf upgrade -y
+  args:
+    executable: /bin/bash
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_DEFAULT_REGION: "{{ region }}"
+  when: ec2_instance.changed
+
+- name: Create a new AMI
+  ec2_ami:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    instance_id: "{{ ec2_instance.instances[0].id }}"
+    name: rhel8gold-latest
+  register: ami_info
+  when: ec2_instance.changed
+
+- name: Terminate EC2 instance
+  ec2:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: terminated
+    instance_ids: "{{ ec2_instance.instances[0].id }}"
+  when: ec2_instance.changed
+

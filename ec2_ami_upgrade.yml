@@ -1,0 +1,9 @@
+---
+- name: Deploy EC2 Instance and Upgrade AMI
+  hosts: all
+  gather_facts: no
+  become_user: root
+  tasks:
+    - include_role:
+        name: ec2_ami_upgrade
+
